@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MyMetabolik</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #0077b6;
+      --accent: #00b4d8;
+      --bg: #e0f7fa;
+      --text: #023047;
+      --card-bg: #ffffff;
+      --radius: 16px;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      margin: 0;
+      padding: 0;
+      color: var(--text);
+    }
+
+    header {
+      background: linear-gradient(to right, var(--primary), var(--accent));
+      color: white;
+      padding: 2rem 1rem;
+      text-align: center;
+      font-size: 2rem;
+      font-weight: 700;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+      max-width: 960px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 2rem;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.4rem;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      align-self: start;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #009ec4;
+    }
+
+    select, input, textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-family: inherit;
+      resize: vertical;
+    }
+
+    a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 1.2rem;
+    }
+
+    #plan-personalizado {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <header>MyMetabolik</header>
+  <div class="container">
+    <div class="card">
+      <h2><i class="fas fa-utensils"></i> Registro de comida</h2>
+      <select id="comida-tipo">
+        <option>Desayuno</option>
+        <option>Almuerzo</option>
+        <option>Merienda</option>
+        <option>Cena</option>
+      </select>
+      <textarea id="comida" placeholder="Especifica los alimentos..."></textarea>
+      <button onclick="guardar('comida')">Guardar comida</button>
+    </div>
+
+    <div class="card">
+      <h2><i class="fas fa-dumbbell"></i> Registro de actividad física</h2>
+      <select id="actividad-tipo">
+        <option>Cardio</option>
+        <option>Fuerza</option>
+        <option>Estiramientos</option>
+        <option>Otro</option>
+      </select>
+      <textarea id="actividad" placeholder="Ejemplo: Caminata 30 minutos"></textarea>
+      <button onclick="guardar('actividad')">Guardar actividad</button>
+    </div>
+
+    <div class="card">
+      <h2><i class="fas fa-bell"></i> Calendario de citas y medicación</h2>
+      <input type="datetime-local" id="fecha-cita" />
+      <input type="text" id="recordatorio" placeholder="Ej. Cita con nutricionista" />
+      <button onclick="agregarRecordatorio()">Agregar</button>
+      <ul id="lista-recordatorios"></ul>
+    </div>
+
+    <div class="card">
+      <h2><i class="fas fa-video"></i> Videoconsulta y mensajería</h2>
+      <select id="profesional">
+        <option>Nutricionista</option>
+        <option>Entrenador</option>
+        <option>Psicólogo</option>
+        <option>Enfermera</option>
+        <option>Médico</option>
+      </select>
+      <input type="time" id="hora-consulta" />
+      <button onclick="simularLlamada()">Agendar llamada</button>
+      <div>
+        <textarea placeholder="Escribe un mensaje..."></textarea>
+        <button>Enviar</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><i class="fas fa-chart-bar"></i> Estadísticas</h2>
+      <p>Comidas registradas esta semana: <span id="stat-comida">0</span></p>
+      <p>Actividades registradas: <span id="stat-actividad">0</span></p>
+    </div>
+
+    <div class="card" id="plan-personalizado">
+      <h2><i class="fas fa-heartbeat"></i> Plan personalizado</h2>
+      <p>Dieta equilibrada, 2L de agua diarios, 30min de ejercicio diario, descanso adecuado.</p>
+    </div>
+  </div>
+
+  <script>
+    function guardar(tipo) {
+      const contenido = document.getElementById(tipo).value;
+      if (contenido.trim() !== '') {
+        let count = parseInt(localStorage.getItem(`stat-${tipo}`) || '0');
+        count++;
+        localStorage.setItem(`stat-${tipo}`, count);
+        document.getElementById(`stat-${tipo}`).textContent = count;
+        document.getElementById(tipo).value = '';
+        mostrarPlanSiCompleto();
+      }
+    }
+
+    function agregarRecordatorio() {
+      const texto = document.getElementById("recordatorio").value;
+      const fecha = document.getElementById("fecha-cita").value;
+      if (texto.trim() !== '' && fecha.trim() !== '') {
+        const li = document.createElement("li");
+        li.textContent = `${fecha}: ${texto}`;
+        document.getElementById("lista-recordatorios").appendChild(li);
+        document.getElementById("recordatorio").value = '';
+        document.getElementById("fecha-cita").value = '';
+      }
+    }
+
+    function simularLlamada() {
+      const profesional = document.getElementById("profesional").value;
+      const hora = document.getElementById("hora-consulta").value;
+      alert(`Llamada agendada con ${profesional} a las ${hora}`);
+    }
+
+    function mostrarPlanSiCompleto() {
+      const comidas = parseInt(localStorage.getItem('stat-comida') || '0');
+      const actividad = parseInt(localStorage.getItem('stat-actividad') || '0');
+      if (comidas > 0 && actividad > 0) {
+        document.getElementById('plan-personalizado').style.display = 'flex';
+      }
+    }
+
+    window.onload = () => {
+      ['comida', 'actividad'].forEach(tipo => {
+        const count = localStorage.getItem(`stat-${tipo}`) || '0';
+        document.getElementById(`stat-${tipo}`).textContent = count;
+      });
+      mostrarPlanSiCompleto();
+    };
+  </script>
+</body>
+</html>
